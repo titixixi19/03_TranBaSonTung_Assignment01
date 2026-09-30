@@ -1,0 +1,59 @@
+@model NewsArticleFormVM
+
+<form asp-action="@(Model.IsEdit ? "Edit" : "Create")" method="post" class="ajax-form" novalidate>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+    <input type="hidden" asp-for="NewsArticleID" />
+
+    <div class="mb-3">
+        <label asp-for="NewsTitle" class="form-label"></label>
+        <input asp-for="NewsTitle" class="form-control" />
+        <span asp-validation-for="NewsTitle" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Headline" class="form-label"></label>
+        <input asp-for="Headline" class="form-control" />
+        <span asp-validation-for="Headline" class="text-danger"></span>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="CategoryID" class="form-label"></label>
+            <select asp-for="CategoryID" class="form-select"
+                    asp-items="@(new SelectList(Model.CategoryOptions, "CategoryID", "CategoryName", Model.CategoryID))">
+                <option value="">-- Select category --</option>
+            </select>
+            <span asp-validation-for="CategoryID" class="text-danger"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="NewsSource" class="form-label"></label>
+            <input asp-for="NewsSource" class="form-control" />
+            <span asp-validation-for="NewsSource" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label asp-for="NewsContent" class="form-label"></label>
+        <textarea asp-for="NewsContent" class="form-control" rows="8"></textarea>
+        <span asp-validation-for="NewsContent" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Tags</label>
+        <div class="tag-list d-flex flex-wrap gap-2">
+            @foreach (var tag in Model.TagOptions)
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="TagIds" value="@tag.TagID" id="tag_@tag.TagID"
+                           checked="@Model.TagIds.Contains(tag.TagID)" />
+                    <label class="form-check-label" for="tag_@tag.TagID">@tag.TagName?.Trim()</label>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="form-check form-switch mb-3">
+        <input asp-for="NewsStatus" class="form-check-input" role="switch" />
+        <label asp-for="NewsStatus" class="form-check-label"></label>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">@(Model.IsEdit ? "Save changes" : "Create")</button>
+    </div>
+</form>

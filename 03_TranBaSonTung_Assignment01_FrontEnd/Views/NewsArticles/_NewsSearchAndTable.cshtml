@@ -1,0 +1,96 @@
+@model NewsSearchVM
+@{
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+}
+
+<form method="get" asp-action="@action" class="card card-body mb-3">
+    <div class="row g-2">
+        <div class="col-md-5">
+            <input type="text" name="keyword" value="@Model.Keyword" class="form-control" placeholder="Search by title, headline or content" />
+        </div>
+        <div class="col-md-3">
+            <select name="categoryId" class="form-select">
+                <option value="">All categories</option>
+                @foreach (var c in Model.Categories)
+                {
+                    <option value="@c.CategoryID" selected="@(Model.CategoryId == c.CategoryID)">@c.CategoryName</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="status" class="form-select">
+                <option value="">All statuses</option>
+                <option value="true" selected="@(Model.Status == true)">Active</option>
+                <option value="false" selected="@(Model.Status == false)">Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-search"></i></button>
+            <a asp-action="@action" class="btn btn-outline-secondary">Reset</a>
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Tags</th>
+                    <th>Author</th>
+                    <th>Created</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Articles.Any())
+                {
+                    <tr><td colspan="8" class="text-center text-muted py-4">No news articles found.</td></tr>
+                }
+                @foreach (var n in Model.Articles)
+                {
+                    <tr>
+                        <td>@n.NewsArticleID</td>
+                        <td style="max-width:320px">
+                            <a asp-controller="Home" asp-action="Details" asp-route-id="@n.NewsArticleID" class="fw-semibold text-decoration-none">@n.NewsTitle</a>
+                            <div class="small text-muted text-truncate">@n.Headline</div>
+                        </td>
+                        <td>@n.Category?.CategoryName</td>
+                        <td>
+                            @foreach (var t in n.Tags)
+                            {
+                                <span class="badge rounded-pill bg-light text-dark border">@t.TagName?.Trim()</span>
+                            }
+                        </td>
+                        <td>@n.CreatedBy?.AccountName</td>
+                        <td class="text-nowrap">@n.CreatedDate?.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            @if (n.NewsStatus == true)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <button class="btn btn-sm btn-outline-primary" data-modal-url="@Url.Action("Edit", "NewsArticles", new { id = n.NewsArticleID })" data-modal-title="Edit news article">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <form asp-controller="NewsArticles" asp-action="Delete" asp-route-id="@n.NewsArticleID" asp-route-returnAction="@action"
+                                  method="post" class="d-inline confirm-form"
+                                  data-confirm="Delete news article '@n.NewsTitle'? This cannot be undone.">
+                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

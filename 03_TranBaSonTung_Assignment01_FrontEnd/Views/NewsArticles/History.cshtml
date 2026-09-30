@@ -1,0 +1,16 @@
+@model NewsSearchVM
+@{
+    ViewData["Title"] = "My News History";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">My News History</h2>
+        <p class="text-muted mb-0">News articles created by you (@Model.Articles.Count)</p>
+    </div>
+    <button class="btn btn-primary" data-modal-url="@Url.Action("Create")" data-modal-title="Create news article">
+        <i class="bi bi-plus-lg"></i> New article
+    </button>
+</div>
+
+<partial name="_NewsSearchAndTable" model="Model" />

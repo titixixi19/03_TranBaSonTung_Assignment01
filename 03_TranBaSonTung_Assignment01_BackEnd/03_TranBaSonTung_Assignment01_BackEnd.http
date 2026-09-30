@@ -1,0 +1,23 @@
+@host = http://localhost:5203
+
+### Login as admin (credentials from appsettings.json)
+POST {{host}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@FUNewsManagementSystem.org",
+  "password": "@@abc123@@"
+}
+
+### Public: active news with category, author and tags
+GET {{host}}/odata/NewsArticles?$expand=Category($select=CategoryName),CreatedBy($select=AccountName),Tags&$orderby=CreatedDate desc
+
+### Search news by title
+GET {{host}}/odata/NewsArticles?$filter=contains(tolower(NewsTitle),'alumni')&$select=NewsArticleID,NewsTitle
+
+### Categories and tags
+GET {{host}}/odata/Categories?$filter=IsActive eq true
+GET {{host}}/odata/Tags
+
+### OData metadata
+GET {{host}}/odata/$metadata

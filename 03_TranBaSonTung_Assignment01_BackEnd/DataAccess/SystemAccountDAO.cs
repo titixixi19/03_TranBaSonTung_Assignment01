@@ -1,4 +1,5 @@
 using BackEnd.BusinessObjects;
+using BackEnd.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackEnd.DataAccess;
@@ -65,7 +66,7 @@ public sealed class SystemAccountDAO
     {
         using var context = new FUNewsManagementContext();
         var existing = context.SystemAccounts.FirstOrDefault(a => a.AccountID == account.AccountID)
-                       ?? throw new KeyNotFoundException("Account not found.");
+                       ?? throw new NotFoundException("Account not found.");
 
         existing.AccountName = account.AccountName;
         existing.AccountEmail = account.AccountEmail;
@@ -81,10 +82,10 @@ public sealed class SystemAccountDAO
     {
         using var context = new FUNewsManagementContext();
         var account = context.SystemAccounts.FirstOrDefault(a => a.AccountID == id)
-                      ?? throw new KeyNotFoundException("Account not found.");
+                      ?? throw new NotFoundException("Account not found.");
 
         if (context.NewsArticles.Any(n => n.CreatedByID == id))
-            throw new InvalidOperationException("This account has already created news articles and cannot be deleted.");
+            throw new BusinessException("This account has already created news articles and cannot be deleted.");
 
         context.SystemAccounts.Remove(account);
         context.SaveChanges();

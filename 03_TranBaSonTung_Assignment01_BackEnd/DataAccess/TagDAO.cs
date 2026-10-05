@@ -1,4 +1,5 @@
 using BackEnd.BusinessObjects;
+using BackEnd.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackEnd.DataAccess;
@@ -38,7 +39,7 @@ public sealed class TagDAO
     {
         var normalized = name.Trim().ToLower();
         if (context.Tags.Any(t => t.TagName!.Trim().ToLower() == normalized && (!excludeId.HasValue || t.TagID != excludeId)))
-            throw new InvalidOperationException("Tag name already exists.");
+            throw new BusinessException("Tag name already exists.");
     }
 
     public Tag AddTag(Tag tag)
@@ -56,7 +57,7 @@ public sealed class TagDAO
     {
         using var context = new FUNewsManagementContext();
         var existing = context.Tags.FirstOrDefault(t => t.TagID == tag.TagID)
-                       ?? throw new KeyNotFoundException("Tag not found.");
+                       ?? throw new NotFoundException("Tag not found.");
         EnsureUniqueName(context, tag.TagName!, tag.TagID);
 
         existing.TagName = tag.TagName;
@@ -68,10 +69,10 @@ public sealed class TagDAO
     {
         using var context = new FUNewsManagementContext();
         var tag = context.Tags.FirstOrDefault(t => t.TagID == id)
-                  ?? throw new KeyNotFoundException("Tag not found.");
+                  ?? throw new NotFoundException("Tag not found.");
 
         if (context.NewsArticles.Any(n => n.Tags.Any(t => t.TagID == id)))
-            throw new InvalidOperationException("This tag is used by news articles and cannot be deleted.");
+            throw new BusinessException("This tag is used by news articles and cannot be deleted.");
 
         context.Tags.Remove(tag);
         context.SaveChanges();

@@ -1,4 +1,5 @@
 using BackEnd.BusinessObjects;
+using BackEnd.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackEnd.DataAccess;
@@ -64,7 +65,7 @@ public sealed class NewsArticleDAO
     private static void ValidateReferences(FUNewsManagementContext context, NewsArticle article)
     {
         if (!context.Categories.Any(c => c.CategoryID == article.CategoryID))
-            throw new InvalidOperationException("Category does not exist.");
+            throw new BusinessException("Category does not exist.");
     }
 
     public NewsArticle AddNewsArticle(NewsArticle article, IEnumerable<int> tagIds)
@@ -86,7 +87,7 @@ public sealed class NewsArticleDAO
         using var context = new FUNewsManagementContext();
         var existing = context.NewsArticles.Include(n => n.Tags)
                            .FirstOrDefault(n => n.NewsArticleID == article.NewsArticleID)
-                       ?? throw new KeyNotFoundException("News article not found.");
+                       ?? throw new NotFoundException("News article not found.");
         ValidateReferences(context, article);
 
         existing.NewsTitle = article.NewsTitle;
@@ -112,7 +113,7 @@ public sealed class NewsArticleDAO
     {
         using var context = new FUNewsManagementContext();
         var article = context.NewsArticles.Include(n => n.Tags).FirstOrDefault(n => n.NewsArticleID == id)
-                      ?? throw new KeyNotFoundException("News article not found.");
+                      ?? throw new NotFoundException("News article not found.");
 
         // Remove NewsTag rows first (no cascade on that FK)
         article.Tags.Clear();

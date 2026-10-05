@@ -1,4 +1,5 @@
 using BackEnd.BusinessObjects;
+using BackEnd.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackEnd.DataAccess;
@@ -45,7 +46,7 @@ public sealed class CategoryDAO
     {
         using var context = new FUNewsManagementContext();
         if (category.ParentCategoryID.HasValue && !context.Categories.Any(c => c.CategoryID == category.ParentCategoryID))
-            throw new InvalidOperationException("Parent category does not exist.");
+            throw new BusinessException("Parent category does not exist.");
 
         context.Categories.Add(category);
         context.SaveChanges();
@@ -56,10 +57,10 @@ public sealed class CategoryDAO
     {
         using var context = new FUNewsManagementContext();
         var existing = context.Categories.FirstOrDefault(c => c.CategoryID == category.CategoryID)
-                       ?? throw new KeyNotFoundException("Category not found.");
+                       ?? throw new NotFoundException("Category not found.");
 
         if (category.ParentCategoryID.HasValue && !context.Categories.Any(c => c.CategoryID == category.ParentCategoryID))
-            throw new InvalidOperationException("Parent category does not exist.");
+            throw new BusinessException("Parent category does not exist.");
 
         existing.CategoryName = category.CategoryName;
         existing.CategoryDesciption = category.CategoryDesciption;
@@ -72,13 +73,13 @@ public sealed class CategoryDAO
     {
         using var context = new FUNewsManagementContext();
         var category = context.Categories.FirstOrDefault(c => c.CategoryID == id)
-                       ?? throw new KeyNotFoundException("Category not found.");
+                       ?? throw new NotFoundException("Category not found.");
 
         if (context.NewsArticles.Any(n => n.CategoryID == id))
-            throw new InvalidOperationException("This category already belongs to news articles and cannot be deleted.");
+            throw new BusinessException("This category already belongs to news articles and cannot be deleted.");
 
         if (context.Categories.Any(c => c.ParentCategoryID == id && c.CategoryID != id))
-            throw new InvalidOperationException("This category is the parent of other categories and cannot be deleted.");
+            throw new BusinessException("This category is the parent of other categories and cannot be deleted.");
 
         // Seed data uses self-referencing parents; clear it before deleting
         if (category.ParentCategoryID == id)

@@ -37,8 +37,12 @@ public sealed class SystemAccountDAO
     public SystemAccount? Login(string email, string password)
     {
         using var context = new FUNewsManagementContext();
-        return context.SystemAccounts.AsNoTracking()
-            .FirstOrDefault(a => a.AccountEmail == email && a.AccountPassword == password);
+        // The database collation is case-insensitive, so only the email is matched in SQL;
+        // the password is compared in memory with an exact (case-sensitive) comparison.
+        var account = context.SystemAccounts.AsNoTracking().FirstOrDefault(a => a.AccountEmail == email);
+        return account != null && string.Equals(account.AccountPassword, password, StringComparison.Ordinal)
+            ? account
+            : null;
     }
 
     public bool EmailExists(string email, short? excludeId = null)

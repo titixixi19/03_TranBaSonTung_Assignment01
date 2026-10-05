@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
-    options.Filters.Add<ApiUnauthorizedExceptionFilter>();
+    options.Filters.Add<ApiExceptionFilter>();
 });
 
 builder.Services.AddHttpContextAccessor();

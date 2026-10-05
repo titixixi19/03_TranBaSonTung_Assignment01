@@ -34,18 +34,34 @@ public class ApiClient
         return request;
     }
 
+    private const string ConnectionErrorMessage = "Cannot connect to the API server. Please make sure the BackEnd is running.";
+
     private static void ThrowIfUnauthorized(HttpResponseMessage response)
     {
         if (response.StatusCode is HttpStatusCode.Unauthorized)
             throw new ApiUnauthorizedException("Your session has expired. Please log in again.");
     }
 
+    // Sends the request, turning connection failures and timeouts into an ApiException
+    private async Task<HttpResponseMessage> SendRequestAsync(HttpMethod method, string url, object? body)
+    {
+        try
+        {
+            return await _http.SendAsync(BuildRequest(method, url, body));
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            throw new ApiException(ConnectionErrorMessage);
+        }
+    }
+
     public async Task<T?> GetAsync<T>(string url)
     {
-        using var response = await _http.SendAsync(BuildRequest(HttpMethod.Get, url, null));
+        using var response = await SendRequestAsync(HttpMethod.Get, url, null);
         if (response.StatusCode == HttpStatusCode.NotFound) return default;
         ThrowIfUnauthorized(response);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+            throw new ApiException($"The API returned an error ({(int)response.StatusCode}). Please try again later.");
         return await response.Content.ReadFromJsonAsync<T>(JsonOptions);
     }
 
@@ -56,10 +72,21 @@ public class ApiClient
     public Task<ApiResult> PutAsync(string url, object body) => SendAsync(HttpMethod.Put, url, body);
     public Task<ApiResult> DeleteAsync(string url) => SendAsync(HttpMethod.Delete, url, null);
 
-    // Used by login: returns the error message instead of throwing on 401
+    // Used by login: returns the error message instead of throwing on 401.
+    // Connection failures are returned as a failed result so forms can show the message.
     public async Task<ApiResult> SendAsync(HttpMethod method, string url, object? body, bool throwOnUnauthorized = true)
     {
-        using var response = await _http.SendAsync(BuildRequest(method, url, body));
+        HttpResponseMessage response;
+        try
+        {
+            response = await SendRequestAsync(method, url, body);
+        }
+        catch (ApiException ex)
+        {
+            return new ApiResult { Success = false, Message = ex.Message };
+        }
+
+        using var _ = response;
         if (throwOnUnauthorized) ThrowIfUnauthorized(response);
 
         var content = await response.Content.ReadAsStringAsync();

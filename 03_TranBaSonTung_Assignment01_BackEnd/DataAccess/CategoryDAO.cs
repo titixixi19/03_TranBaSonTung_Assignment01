@@ -42,11 +42,38 @@ public sealed class CategoryDAO
             .FirstOrDefault(c => c.CategoryID == id);
     }
 
+    // Ensures the parent exists and that the new parent does not create a loop (A -> B -> A)
+    private static void ValidateParent(FUNewsManagementContext context, short? parentId, short? categoryId = null)
+    {
+        if (!parentId.HasValue) return;
+
+        if (parentId == categoryId)
+            throw new BusinessException("A category cannot be its own parent.");
+
+        var parents = context.Categories.AsNoTracking()
+            .Select(c => new { c.CategoryID, c.ParentCategoryID })
+            .ToDictionary(c => c.CategoryID, c => c.ParentCategoryID);
+
+        if (!parents.ContainsKey(parentId.Value))
+            throw new BusinessException("Parent category does not exist.");
+
+        if (!categoryId.HasValue) return;
+
+        // Walk up from the new parent; reaching the category itself means a loop
+        var visited = new HashSet<short>();
+        short? current = parentId;
+        while (current.HasValue && visited.Add(current.Value) && parents.TryGetValue(current.Value, out var next))
+        {
+            if (current == categoryId)
+                throw new BusinessException("The selected parent would create a circular category hierarchy.");
+            current = next;
+        }
+    }
+
     public Category AddCategory(Category category)
     {
         using var context = new FUNewsManagementContext();
-        if (category.ParentCategoryID.HasValue && !context.Categories.Any(c => c.CategoryID == category.ParentCategoryID))
-            throw new BusinessException("Parent category does not exist.");
+        ValidateParent(context, category.ParentCategoryID);
 
         context.Categories.Add(category);
         context.SaveChanges();
@@ -59,8 +86,7 @@ public sealed class CategoryDAO
         var existing = context.Categories.FirstOrDefault(c => c.CategoryID == category.CategoryID)
                        ?? throw new NotFoundException("Category not found.");
 
-        if (category.ParentCategoryID.HasValue && !context.Categories.Any(c => c.CategoryID == category.ParentCategoryID))
-            throw new BusinessException("Parent category does not exist.");
+        ValidateParent(context, category.ParentCategoryID, category.CategoryID);
 
         existing.CategoryName = category.CategoryName;
         existing.CategoryDesciption = category.CategoryDesciption;

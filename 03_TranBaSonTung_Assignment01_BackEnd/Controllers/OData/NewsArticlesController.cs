@@ -15,15 +15,29 @@ public class NewsArticlesController : ODataController
     // Anonymous users only see active news; Staff/Admin see everything
     private bool CanSeeInactive => User.IsInRole(AccountRoles.StaffName) || User.IsInRole(AccountRoles.AdminName);
 
+    // Public readers only get the author's name, never email/role
+    private static NewsArticle HideAuthorDetails(NewsArticle article)
+    {
+        if (article.CreatedBy != null)
+        {
+            article.CreatedBy = new SystemAccount
+            {
+                AccountID = article.CreatedBy.AccountID,
+                AccountName = article.CreatedBy.AccountName
+            };
+        }
+        return article;
+    }
+
     [EnableQuery(MaxExpansionDepth = 3)]
     public IActionResult Get()
     {
-        var articles = _repository.GetNewsArticles().AsQueryable();
+        var articles = _repository.GetNewsArticles();
         if (!CanSeeInactive)
         {
-            articles = articles.Where(n => n.NewsStatus == true);
+            articles = articles.Where(n => n.NewsStatus == true).Select(HideAuthorDetails).ToList();
         }
-        return Ok(articles);
+        return Ok(articles.AsQueryable());
     }
 
     [EnableQuery(MaxExpansionDepth = 3)]
@@ -34,6 +48,6 @@ public class NewsArticlesController : ODataController
         {
             return NotFound();
         }
-        return Ok(article);
+        return Ok(CanSeeInactive ? article : HideAuthorDetails(article));
     }
 }

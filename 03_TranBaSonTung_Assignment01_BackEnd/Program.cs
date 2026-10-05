@@ -50,6 +50,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
+        options.Events = new JwtBearerEvents
+        {
+            // A staff token stays valid only while the account still exists and still has the Staff role
+            OnTokenValidated = context =>
+            {
+                if (context.Principal?.IsInRole(AccountRoles.StaffName) == true)
+                {
+                    var repository = context.HttpContext.RequestServices.GetRequiredService<ISystemAccountRepository>();
+                    var account = repository.GetAccountById(context.Principal.GetAccountId());
+                    if (account == null || account.AccountRole != AccountRoles.Staff)
+                    {
+                        context.Fail("The account no longer exists or is no longer a staff member.");
+                    }
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 builder.Services.AddAuthorization();
 

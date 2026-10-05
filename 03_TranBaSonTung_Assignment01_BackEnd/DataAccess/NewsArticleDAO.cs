@@ -62,10 +62,15 @@ public sealed class NewsArticleDAO
         return (max + 1).ToString();
     }
 
-    private static void ValidateReferences(FUNewsManagementContext context, NewsArticle article)
+    // currentCategoryId: the article's category before an update. An article may keep a category
+    // that became inactive later, but cannot be moved into (or created in) an inactive category.
+    private static void ValidateReferences(FUNewsManagementContext context, NewsArticle article, short? currentCategoryId = null)
     {
-        if (!context.Categories.Any(c => c.CategoryID == article.CategoryID))
-            throw new BusinessException("Category does not exist.");
+        var category = context.Categories.AsNoTracking().FirstOrDefault(c => c.CategoryID == article.CategoryID)
+                       ?? throw new BusinessException("Category does not exist.");
+
+        if (category.IsActive != true && category.CategoryID != currentCategoryId)
+            throw new BusinessException("The selected category is inactive.");
     }
 
     public NewsArticle AddNewsArticle(NewsArticle article, IEnumerable<int> tagIds)
@@ -88,7 +93,7 @@ public sealed class NewsArticleDAO
         var existing = context.NewsArticles.Include(n => n.Tags)
                            .FirstOrDefault(n => n.NewsArticleID == article.NewsArticleID)
                        ?? throw new NotFoundException("News article not found.");
-        ValidateReferences(context, article);
+        ValidateReferences(context, article, existing.CategoryID);
 
         existing.NewsTitle = article.NewsTitle;
         existing.Headline = article.Headline;

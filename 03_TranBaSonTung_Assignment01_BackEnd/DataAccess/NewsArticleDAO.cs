@@ -23,7 +23,7 @@ public sealed class NewsArticleDAO
         }
     }
 
-    private static IQueryable<NewsArticle> Query(FUNewsManagementContext context) =>
+    private static IQueryable<NewsArticle> Query(FUNewsManagementDbContext context) =>
         context.NewsArticles
             .AsNoTracking()
             .Include(n => n.Category)
@@ -32,26 +32,26 @@ public sealed class NewsArticleDAO
 
     public List<NewsArticle> GetNewsArticles()
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         return Query(context).OrderByDescending(n => n.CreatedDate).ToList();
     }
 
     public NewsArticle? GetNewsArticleById(string id)
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         return Query(context).FirstOrDefault(n => n.NewsArticleID == id);
     }
 
     public List<NewsArticle> GetNewsArticlesByPeriod(DateTime startDate, DateTime endDate)
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         return Query(context)
             .Where(n => n.CreatedDate >= startDate && n.CreatedDate <= endDate)
             .OrderByDescending(n => n.CreatedDate)
             .ToList();
     }
 
-    private static string GenerateNewId(FUNewsManagementContext context)
+    private static string GenerateNewId(FUNewsManagementDbContext context)
     {
         var max = context.NewsArticles
             .Select(n => n.NewsArticleID)
@@ -64,7 +64,7 @@ public sealed class NewsArticleDAO
 
     // currentCategoryId: the article's category before an update. An article may keep a category
     // that became inactive later, but cannot be moved into (or created in) an inactive category.
-    private static void ValidateReferences(FUNewsManagementContext context, NewsArticle article, short? currentCategoryId = null)
+    private static void ValidateReferences(FUNewsManagementDbContext context, NewsArticle article, short? currentCategoryId = null)
     {
         var category = context.Categories.AsNoTracking().FirstOrDefault(c => c.CategoryID == article.CategoryID)
                        ?? throw new BusinessException("Category does not exist.");
@@ -75,7 +75,7 @@ public sealed class NewsArticleDAO
 
     public NewsArticle AddNewsArticle(NewsArticle article, IEnumerable<int> tagIds)
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         ValidateReferences(context, article);
 
         article.NewsArticleID = GenerateNewId(context);
@@ -89,7 +89,7 @@ public sealed class NewsArticleDAO
 
     public void UpdateNewsArticle(NewsArticle article, IEnumerable<int> tagIds)
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         var existing = context.NewsArticles.Include(n => n.Tags)
                            .FirstOrDefault(n => n.NewsArticleID == article.NewsArticleID)
                        ?? throw new NotFoundException("News article not found.");
@@ -116,7 +116,7 @@ public sealed class NewsArticleDAO
 
     public void DeleteNewsArticle(string id)
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         var article = context.NewsArticles.Include(n => n.Tags).FirstOrDefault(n => n.NewsArticleID == id)
                       ?? throw new NotFoundException("News article not found.");
 

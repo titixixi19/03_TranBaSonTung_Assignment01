@@ -25,17 +25,17 @@ public sealed class TagDAO
 
     public List<Tag> GetTags()
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         return context.Tags.AsNoTracking().OrderBy(t => t.TagName).ToList();
     }
 
     public Tag? GetTagById(int id)
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         return context.Tags.AsNoTracking().FirstOrDefault(t => t.TagID == id);
     }
 
-    private static void EnsureUniqueName(FUNewsManagementContext context, string name, int? excludeId = null)
+    private static void EnsureUniqueName(FUNewsManagementDbContext context, string name, int? excludeId = null)
     {
         var normalized = name.Trim().ToLower();
         if (context.Tags.Any(t => t.TagName!.Trim().ToLower() == normalized && (!excludeId.HasValue || t.TagID != excludeId)))
@@ -44,7 +44,7 @@ public sealed class TagDAO
 
     public Tag AddTag(Tag tag)
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         EnsureUniqueName(context, tag.TagName!);
         // TagID is not an identity column
         tag.TagID = (context.Tags.Max(t => (int?)t.TagID) ?? 0) + 1;
@@ -55,7 +55,7 @@ public sealed class TagDAO
 
     public void UpdateTag(Tag tag)
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         var existing = context.Tags.FirstOrDefault(t => t.TagID == tag.TagID)
                        ?? throw new NotFoundException("Tag not found.");
         EnsureUniqueName(context, tag.TagName!, tag.TagID);
@@ -67,7 +67,7 @@ public sealed class TagDAO
 
     public void DeleteTag(int id)
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         var tag = context.Tags.FirstOrDefault(t => t.TagID == id)
                   ?? throw new NotFoundException("Tag not found.");
 

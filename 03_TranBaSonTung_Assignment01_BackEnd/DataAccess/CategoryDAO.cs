@@ -25,7 +25,7 @@ public sealed class CategoryDAO
 
     public List<Category> GetCategories()
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         return context.Categories
             .AsNoTracking()
             .Include(c => c.ParentCategory)
@@ -35,7 +35,7 @@ public sealed class CategoryDAO
 
     public Category? GetCategoryById(short id)
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         return context.Categories
             .AsNoTracking()
             .Include(c => c.ParentCategory)
@@ -43,7 +43,7 @@ public sealed class CategoryDAO
     }
 
     // Ensures the parent exists and that the new parent does not create a loop (A -> B -> A)
-    private static void ValidateParent(FUNewsManagementContext context, short? parentId, short? categoryId = null)
+    private static void ValidateParent(FUNewsManagementDbContext context, short? parentId, short? categoryId = null)
     {
         if (!parentId.HasValue) return;
 
@@ -72,7 +72,7 @@ public sealed class CategoryDAO
 
     public Category AddCategory(Category category)
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         ValidateParent(context, category.ParentCategoryID);
 
         context.Categories.Add(category);
@@ -82,7 +82,7 @@ public sealed class CategoryDAO
 
     public void UpdateCategory(Category category)
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         var existing = context.Categories.FirstOrDefault(c => c.CategoryID == category.CategoryID)
                        ?? throw new NotFoundException("Category not found.");
 
@@ -97,7 +97,7 @@ public sealed class CategoryDAO
 
     public void DeleteCategory(short id)
     {
-        using var context = new FUNewsManagementContext();
+        using var context = new FUNewsManagementDbContext();
         var category = context.Categories.FirstOrDefault(c => c.CategoryID == id)
                        ?? throw new NotFoundException("Category not found.");
 

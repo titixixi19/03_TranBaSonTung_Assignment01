@@ -5,6 +5,7 @@ using BackEnd.Common;
 using BackEnd.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.OData;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
@@ -23,6 +24,10 @@ static IEdmModel GetEdmModel()
     accounts.Ignore(a => a.AccountPassword); // never expose passwords
     return odataBuilder.GetEdmModel();
 }
+
+// Database: connection string "MyCnn" from appsettings.json
+builder.Services.AddDbContext<FUNewsManagementDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("MyCnn")));
 
 // Repository layer (DAOs behind them are singletons)
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();

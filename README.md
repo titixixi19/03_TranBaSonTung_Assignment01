@@ -7,7 +7,7 @@ Tran Ba Son Tung – ASP.NET Core Web API (OData) + ASP.NET Core MVC client, .NE
 ```
 03_TranBaSonTung_Assignment01.sln
 ├── 03_TranBaSonTung_Assignment01_BackEnd    ASP.NET Core Web API + OData
-│   ├── BusinessObjects/   Entities + FUNewsManagementContext (connection string from appsettings.json)
+│   ├── BusinessObjects/   Entities + FUNewsManagementDbContext (connection string from appsettings.json)
 │   ├── DataAccess/        DAOs – Singleton pattern
 │   ├── Repositories/      Repository pattern (interfaces + implementations, call the DAOs)
 │   ├── DTOs/              Request / response models with data-annotation validation
@@ -21,7 +21,7 @@ Controllers never touch the database directly: Controller → Repository → DAO
 ## Run
 
 1. Run `Database/FUNewsManagement.sql` on SQL Server 2019+.
-2. Edit `ConnectionStrings:FUNewsManagementDB` in `03_TranBaSonTung_Assignment01_BackEnd/appsettings.json` if needed.
+2. Edit `ConnectionStrings:MyCnn` in `03_TranBaSonTung_Assignment01_BackEnd/appsettings.json` if needed.
 3. In Visual Studio: *Solution → Configure Startup Projects → Multiple startup projects* → start both BackEnd and FrontEnd (profile `http`).
    Or from a terminal:
    ```

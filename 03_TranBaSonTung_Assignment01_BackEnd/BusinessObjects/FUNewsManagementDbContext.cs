@@ -2,13 +2,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BackEnd.BusinessObjects;
 
-public partial class FUNewsManagementContext : DbContext
+public partial class FUNewsManagementDbContext : DbContext
 {
-    public FUNewsManagementContext()
+    public FUNewsManagementDbContext()
     {
     }
 
-    public FUNewsManagementContext(DbContextOptions<FUNewsManagementContext> options) : base(options)
+    public FUNewsManagementDbContext(DbContextOptions<FUNewsManagementDbContext> options) : base(options)
     {
     }
 
@@ -17,15 +17,17 @@ public partial class FUNewsManagementContext : DbContext
     public virtual DbSet<SystemAccount> SystemAccounts { get; set; }
     public virtual DbSet<Tag> Tags { get; set; }
 
-    // The connection string is always read from appsettings.json
+    public const string ConnectionStringName = "MyCnn";
+
+    // Used when a DAO creates the context with "new": the connection string "MyCnn" is read from appsettings.json
     private static string GetConnectionString()
     {
         IConfiguration config = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .Build();
-        return config.GetConnectionString("FUNewsManagementDB")
-               ?? throw new InvalidOperationException("Connection string 'FUNewsManagementDB' not found.");
+        return config.GetConnectionString(ConnectionStringName)
+               ?? throw new InvalidOperationException($"Connection string '{ConnectionStringName}' not found.");
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
